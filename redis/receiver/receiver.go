@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/Telefonica/redis-vs-nats/model"
 
@@ -12,6 +13,8 @@ import (
 
 var wg sync.WaitGroup // 1
 var client *redis.Client
+var n int64
+var Ex, Ex2 float64
 
 func init() {
 	client = redis.NewClient(&redis.Options{
@@ -25,6 +28,14 @@ func main() {
 	wg.Add(1)
 	go worker()
 	wg.Wait()
+
+	fN := float64(n)
+	fEx := float64(Ex)
+	fEx2 := float64(Ex2)
+
+	mean := fEx / fN
+	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
+	log.Printf("Messages received: %d\nLatency: mean %gs, variance %gs\n", n, mean, variance)
 }
 
 func worker() {
@@ -41,10 +52,18 @@ func worker() {
 
 	channel := pubsub.ChannelSize(1000000)
 
-	message := model.Message{}
 	for packet := range channel {
-		json.Unmarshal([]byte(packet.Payload), &message)
-		log.Default().Println("Received message: ", message)
+		var message model.Message
+		if err = json.Unmarshal([]byte(packet.Payload), &message); err != nil {
+			log.Printf("error unmarshaling message: %s", err)
+		} else {
+			x := time.Since(*message.SentAt).Seconds()
+			n++
+			Ex += x
+			Ex2 += x * x
+			if n >= 100_000 {
+				break
+			}
+		}
 	}
-
 }

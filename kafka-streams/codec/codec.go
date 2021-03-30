@@ -8,14 +8,13 @@ import (
 
 type MessageCodec struct{}
 
-func (c *MessageCodec) Encode(value interface{}) (data []byte, err error) {
+func (c *MessageCodec) Encode(value interface{}) ([]byte, error) {
 	return json.Marshal(value)
 }
 
-func (c *MessageCodec) Decode(data []byte) (value interface{}, err error) {
+func (c *MessageCodec) Decode(data []byte) (interface{}, error) {
 	var message model.Message
-	err = json.Unmarshal([]byte(data), &message)
-	if err != nil {
+	if err := json.Unmarshal([]byte(data), &message); err != nil {
 		return nil, err
 	}
 	return &message, nil

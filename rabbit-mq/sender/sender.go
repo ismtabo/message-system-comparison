@@ -66,6 +66,9 @@ func main() {
 			log.Fatalf("fail to decode message: %s", err)
 		}
 
+		now := time.Now()
+		message.SentAt = &now
+
 		messageJSON, err := json.Marshal(message)
 		if err != nil {
 			log.Fatalf("fail to marshall message: %s", err)

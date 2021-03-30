@@ -41,6 +41,9 @@ func main() {
 		err := decoder.Decode(&message)
 		checkErr(err)
 
+		now := time.Now()
+		message.SentAt = &now
+
 		messageJSON, err := json.Marshal(message)
 		checkErr(err)
 

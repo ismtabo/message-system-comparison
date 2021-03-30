@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -50,8 +51,9 @@ func main() {
 		if err != nil {
 			log.Fatalf("error decoding message: %v", err)
 		}
-
-		_, err = emitter.Emit("some-key", message)
+		now := time.Now()
+		message.SentAt = &now
+		_, err = emitter.Emit(fmt.Sprint(message.ID), message)
 		if err != nil {
 			log.Fatalf("error emitting message: %v", err)
 		}

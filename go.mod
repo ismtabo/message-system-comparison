@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/jinzhu/copier v0.2.8
 	github.com/lovoo/goka v1.0.6
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/nats-io/nats-server/v2 v2.2.0 // indirect
