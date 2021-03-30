@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"redis-vs-nats/model"
 	"time"
+
+	"github.com/Telefonica/redis-vs-nats/model"
 
 	"github.com/nats-io/nats.go"
 )
@@ -49,7 +50,7 @@ func main() {
 	checkErr(err)
 
 	elapsed := time.Since(start)
-	log.Println("Nats Sender took %s", elapsed)
+	log.Printf("Nats Sender took %s\n", elapsed)
 
 }
 

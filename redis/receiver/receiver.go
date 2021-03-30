@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"redis-vs-nats/model"
+	"log"
 	"sync"
+
+	"github.com/Telefonica/redis-vs-nats/model"
 
 	"github.com/go-redis/redis"
 )
@@ -42,6 +44,7 @@ func worker() {
 	message := model.Message{}
 	for packet := range channel {
 		json.Unmarshal([]byte(packet.Payload), &message)
+		log.Default().Println("Received message: ", message)
 	}
 
 }

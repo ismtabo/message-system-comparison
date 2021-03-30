@@ -24,4 +24,10 @@
 
 # End of https://www.gitignore.io/api/go
 
+# Mock data
 json/*
+
+# Mock data
+delivery/docker/**/data
+delivery/docker/**/datalog
+delivery/docker/**/logs

@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"redis-vs-nats/model"
 	"time"
+
+	"github.com/Telefonica/redis-vs-nats/model"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/stan.go"

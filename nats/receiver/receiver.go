@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"redis-vs-nats/model"
 	"sync"
+
+	"github.com/Telefonica/redis-vs-nats/model"
 
 	"github.com/nats-io/nats.go"
 )
@@ -30,6 +31,7 @@ func worker() {
 	client.Subscribe("message", func(m *nats.Msg) {
 		message := model.Message{}
 		json.Unmarshal([]byte(m.Data), &message)
+		log.Default().Println("Received message: ", message)
 	})
 
 }
