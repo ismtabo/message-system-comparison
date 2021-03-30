@@ -5,10 +5,12 @@ import (
 )
 
 type Message struct {
-	ID        uint
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt time.Time
+	ID         uint       `faker:"-"`
+	CreatedAt  *time.Time `faker:"-"`
+	UpdatedAt  *time.Time `faker:"-"`
+	DeletedAt  *time.Time `faker:"-" json:",omitempty"`
+	SentAt     *time.Time `faker:"-" json:",omitempty"`
+	ReceivedAt *time.Time `faker:"-" json:",omitempty"`
 
 	Name      string `faker:"name"`
 	Summary   string `faker:"sentence"`
@@ -28,6 +30,6 @@ type Message struct {
 	CreditCardNumber string `faker:"cc_number"`
 	CreditCardType   string `faker:"cc_type"`
 
-	Criticality int `faker:"boundary_start=1, boundary_end=5"`
+	Criticality int
 	Status      bool
 }
