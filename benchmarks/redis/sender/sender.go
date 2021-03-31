@@ -11,9 +11,10 @@ import (
 	"github.com/go-redis/redis"
 )
 
-var filename string = "../../json/100k.json"
-var client *redis.Client
-var err error
+var (
+	filename string = "../../../json/100k.json"
+	client   *redis.Client
+)
 
 func init() {
 	client = redis.NewClient(&redis.Options{
@@ -28,47 +29,46 @@ func main() {
 	start := time.Now()
 
 	jsonFile, err := os.Open(filename)
-	checkErr(err)
+	if err != nil {
+		log.Fatalf("fail open json file: %s", err)
+	}
 
 	decoder := json.NewDecoder(jsonFile)
 
 	// Read opening file
 	_, err = decoder.Token()
-	checkErr(err)
+	if err != nil {
+		log.Fatalf("fail decoding first token: %s", err)
+	}
 
 	var message model.Message
 	for decoder.More() {
 		err := decoder.Decode(&message)
-		checkErr(err)
+		if err != nil {
+			log.Fatalf("fail decoding message: %s", err)
+		}
 
 		now := time.Now()
 		message.SentAt = &now
 
 		messageJSON, err := json.Marshal(message)
-		checkErr(err)
+		if err != nil {
+			log.Fatalf("fail marshaling message: %s", err)
+		}
 
-		AddRedis(messageJSON)
+		_, err = client.Publish("message", string(messageJSON)).Result()
+		if err != nil {
+			log.Fatalf("fail sending message '%d': %s", message.ID, err)
+		}
 	}
 
 	// Close the file
 	_, err = decoder.Token()
-	checkErr(err)
+	if err != nil {
+		log.Fatalf("fail decoding last token: %s", err)
+	}
 
 	elapsed := time.Since(start)
-	log.Println("Redis Sender took %s", elapsed)
+	log.Printf("Redis Sender took %s\n", elapsed)
 
-}
-
-/*AddRedis publish incident data to insight channel*/
-func AddRedis(data []byte) {
-	_, err = client.Do("PUBLISH", "message", string(data)).Result()
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Println(err)
-	}
 }

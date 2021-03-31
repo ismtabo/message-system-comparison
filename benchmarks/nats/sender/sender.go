@@ -11,9 +11,11 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-var filename string = "../../json/100k.json"
-var client *nats.Conn
-var err error
+var (
+	filename string = "../../../json/100k.json"
+	client   *nats.Conn
+	err      error
+)
 
 func init() {
 	client, err = nats.Connect(nats.DefaultURL)

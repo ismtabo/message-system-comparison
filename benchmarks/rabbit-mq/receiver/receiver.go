@@ -9,12 +9,15 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var conn *amqp.Connection
-var ch *amqp.Channel
-var q amqp.Queue
-var err error
-var n int64
-var Ex, Ex2 float64
+var (
+	conn    *amqp.Connection
+	ch      *amqp.Channel
+	q       amqp.Queue
+	size    int64 = 100_000
+	err     error
+	n       int64
+	Ex, Ex2 float64
+)
 
 func init() {
 	conn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
@@ -56,7 +59,7 @@ func main() {
 
 	forever := make(chan bool)
 
-	go func(last chan bool) {
+	go func(last chan bool, expectedMessages int64) {
 		defer close(last)
 		for d := range msgs {
 			var message model.Message
@@ -67,12 +70,12 @@ func main() {
 				n++
 				Ex += x
 				Ex2 += x * x
-				if n >= 100_000 {
+				if n >= expectedMessages {
 					break
 				}
 			}
 		}
-	}(forever)
+	}(forever, size)
 
 	log.Println("listening")
 	<-forever
@@ -83,5 +86,5 @@ func main() {
 
 	mean := fEx / fN
 	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
-	log.Printf("Messages received: %d\nLatency: mean %gs, variance %gs\n", n, mean, variance)
+	log.Printf("Messages received: %d Latency: mean %gs, variance %gs Throughput: %g msg/s", n, mean, variance, 1/mean)
 }

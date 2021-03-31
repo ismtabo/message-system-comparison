@@ -10,11 +10,13 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var filename string = "../../json/100k.json"
-var conn *amqp.Connection
-var ch *amqp.Channel
-var q amqp.Queue
-var err error
+var (
+	filename string = "../../../json/100k.json"
+	conn     *amqp.Connection
+	ch       *amqp.Channel
+	q        amqp.Queue
+	err      error
+)
 
 func init() {
 	conn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")

@@ -7,15 +7,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/Telefonica/redis-vs-nats/kafka-streams/codec"
+	"github.com/Telefonica/redis-vs-nats/benchmarks/kafka-streams/codec"
 	"github.com/Telefonica/redis-vs-nats/model"
 	"github.com/lovoo/goka"
 )
 
 var (
 	brokers              = []string{"localhost:9092"}
-	topic    goka.Stream = "example-stream"
-	filename string      = "../../json/100k.json"
+	topic    goka.Stream = "messages-stream"
+	filename string      = "../../../json/100k.json"
 	emitter  *goka.Emitter
 	err      error
 )

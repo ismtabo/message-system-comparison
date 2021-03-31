@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/Telefonica/redis-vs-nats/model"
@@ -11,10 +10,12 @@ import (
 	"github.com/go-redis/redis"
 )
 
-var wg sync.WaitGroup // 1
-var client *redis.Client
-var n int64
-var Ex, Ex2 float64
+var (
+	client  *redis.Client
+	size    int64 = 100_000
+	n       int64
+	Ex, Ex2 float64
+)
 
 func init() {
 	client = redis.NewClient(&redis.Options{
@@ -25,22 +26,6 @@ func init() {
 }
 
 func main() {
-	wg.Add(1)
-	go worker()
-	wg.Wait()
-
-	fN := float64(n)
-	fEx := float64(Ex)
-	fEx2 := float64(Ex2)
-
-	mean := fEx / fN
-	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
-	log.Printf("Messages received: %d\nLatency: mean %gs, variance %gs\n", n, mean, variance)
-}
-
-func worker() {
-	defer wg.Done()
-
 	pubsub := client.Subscribe("message")
 	defer pubsub.Close()
 
@@ -50,8 +35,9 @@ func worker() {
 		panic(err)
 	}
 
-	channel := pubsub.ChannelSize(1000000)
+	channel := pubsub.ChannelSize(int(size))
 
+	log.Println("listening")
 	for packet := range channel {
 		var message model.Message
 		if err = json.Unmarshal([]byte(packet.Payload), &message); err != nil {
@@ -61,9 +47,17 @@ func worker() {
 			n++
 			Ex += x
 			Ex2 += x * x
-			if n >= 100_000 {
+			if n >= size {
 				break
 			}
 		}
 	}
+
+	fN := float64(n)
+	fEx := float64(Ex)
+	fEx2 := float64(Ex2)
+
+	mean := fEx / fN
+	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
+	log.Printf("Messages received: %d Latency: mean %gs, variance %gs Throughput: %g msg/s\n", n, mean, variance, 1/mean)
 }
