@@ -97,5 +97,5 @@ func main() {
 	}
 
 	elapsed := time.Since(start)
-	log.Printf("Nats Sender took %s\n", elapsed)
+	log.Printf("RabbitMQ Sender took %s\n", elapsed)
 }

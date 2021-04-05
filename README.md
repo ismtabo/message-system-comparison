@@ -1,9 +1,13 @@
-# NATS vs REDIS
-This repo is prepared to test the performance of nats and redis in pubsub messaging.
+# Messaging Systems Comparison
+This repo is prepared to test the performance of the following messaging systems:
+- Kafka
+- Nats
+- RabbitMQ
+- Redis
 
 ## PREQUISITES
-Redis server - https://redis.io/  
-Nats server - https://nats.io/download/nats-io/nats-server/  
+Redis server - https://redis.io/
+Nats server - https://nats.io/download/nats-io/nats-server/
 NATS streaming server - https://nats.io/download/nats-io/nats-streaming-server/
 
 ## FOLDERS
@@ -56,7 +60,7 @@ NATS server version 0.7.3 (uptime: 3m34s)
 Server:
   Load: CPU:  58.3%  Memory: 8.6M  Slow Consumers: 0
   In:   Msgs: 568.7K  Bytes: 1.7M  Msgs/Sec: 13129.0  Bytes/Sec: 38.5K
-  Out:  Msgs: 1.6M  Bytes: 4.7M  Msgs/Sec: 131290.9  Bytes/Sec: 384.6K    
+  Out:  Msgs: 1.6M  Bytes: 4.7M  Msgs/Sec: 131290.9  Bytes/Sec: 384.6K
 
 Connections: 10
   HOST                 CID    NAME        SUBS    PENDING     MSGS_TO   MSGS_FROM   BYTES_TO    BYTES_FROM  LANG     VERSION  UPTIME   LAST ACTIVITY
@@ -71,11 +75,11 @@ Unfortunately, couldn't find a useful tool like nats-top. If you know any, I wou
 
 ## MY RESULTS
 
-**File**: 100k.json | 100.000 JSON messages | 108mb  
-**NATS**:   6.207s  
-**REDIS**:  8.212s  
-  
-**File**: 10k.json | 10.000 JSON messages | 11mb  
-**NATS**:   623.52ms  
+**File**: 100k.json | 100.000 JSON messages | 108mb
+**NATS**:   6.207s
+**REDIS**:  8.212s
+
+**File**: 10k.json | 10.000 JSON messages | 11mb
+**NATS**:   623.52ms
 **REDIS**:  785.28ms
 

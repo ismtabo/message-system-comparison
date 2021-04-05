@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -11,11 +12,14 @@ import (
 )
 
 var (
-	client  *nats.Conn
-	size    int64 = 100_000
-	err     error
-	n       int64
-	Ex, Ex2 float64
+	client            *nats.Conn
+	size              uint = 100_000
+	err               error
+	n                 uint
+	Ex, Ex2           float64
+	start             time.Time
+	firstTime         time.Time
+	sinceFirstMessage time.Duration
 )
 
 func init() {
@@ -27,18 +31,23 @@ func init() {
 
 func main() {
 	last := make(chan bool)
-	cb := func(last chan bool, expectedMessages int64) func(*nats.Msg) {
+	cb := func(last chan bool, expectedMessages uint) func(*nats.Msg) {
 		return func(m *nats.Msg) {
 			if n < expectedMessages {
 				var message model.Message
 				if err := json.Unmarshal([]byte(m.Data), &message); err != nil {
 					log.Printf("fail copying message to model: %s", err)
 				} else {
+					if message.ID == 1 {
+						start = time.Now()
+						firstTime = *message.SentAt
+					}
 					x := time.Since(*message.SentAt).Seconds()
 					n++
 					Ex += x
 					Ex2 += x * x
-					if n >= expectedMessages {
+					if message.ID == expectedMessages {
+						sinceFirstMessage = time.Since(firstTime)
 						last <- true
 					}
 				}
@@ -58,11 +67,15 @@ func main() {
 		log.Fatalf("error unsubscribing: %s", err)
 	}
 
+	elapsed := time.Since(start)
+
 	fN := float64(n)
 	fEx := float64(Ex)
 	fEx2 := float64(Ex2)
 
 	mean := fEx / fN
 	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
-	log.Printf("Messages received: %d Latency: mean %gs, variance %gs Throughput: %g msg/s", n, mean, variance, 1/mean)
+	log.Println("fN", fmt.Sprintf("%g", fN), "fEx", fmt.Sprintf("%g", fEx))
+	log.Printf("Messages received: %d Total time: %s Time among first send and last receive: %s", n, elapsed, sinceFirstMessage)
+	log.Printf("Latency: mean %gs, variance %gs Throughput: %g msg/s", mean, variance, 1/mean)
 }

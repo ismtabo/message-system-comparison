@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -57,28 +58,40 @@ func main() {
 		log.Fatalf("failed to register a consumer: %s", err)
 	}
 
+	var start time.Time
+	var firstMessage time.Time
+	var sinceFirstMessage time.Duration
+
+	startCh := make(chan time.Time)
 	forever := make(chan bool)
 
-	go func(last chan bool, expectedMessages int64) {
+	go func(startCh chan time.Time, last chan bool, expectedMessages int64) {
 		defer close(last)
 		for d := range msgs {
 			var message model.Message
 			if err = json.Unmarshal(d.Body, &message); err != nil {
 				log.Printf("error unmarshaling message: %s", err)
 			} else {
+				if message.ID == 1 {
+					start = time.Now()
+					firstMessage = *message.SentAt
+				}
 				x := time.Since(*message.SentAt).Seconds()
 				n++
 				Ex += x
 				Ex2 += x * x
-				if n >= expectedMessages {
+				if message.ID == uint(expectedMessages) {
+					sinceFirstMessage = time.Since(firstMessage)
 					break
 				}
 			}
 		}
-	}(forever, size)
+	}(startCh, forever, size)
 
 	log.Println("listening")
 	<-forever
+
+	elapsed := time.Since(start)
 
 	fN := float64(n)
 	fEx := float64(Ex)
@@ -86,5 +99,7 @@ func main() {
 
 	mean := fEx / fN
 	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
-	log.Printf("Messages received: %d Latency: mean %gs, variance %gs Throughput: %g msg/s", n, mean, variance, 1/mean)
+	log.Println("fN", fmt.Sprintf("%g", fN), "fEx", fmt.Sprintf("%g", fEx))
+	log.Printf("Messages received: %d Total time: %s Time among first send and last receive: %s", n, elapsed, sinceFirstMessage)
+	log.Printf("Latency: mean %gs, variance %gs Throughput: %g msg/s", mean, variance, 1/mean)
 }

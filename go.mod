@@ -14,5 +14,7 @@ require (
 	github.com/nats-io/stan.go v0.8.3
 	github.com/onsi/ginkgo v1.15.1 // indirect
 	github.com/onsi/gomega v1.11.0 // indirect
+	github.com/segmentio/kafka-go v0.4.12
 	github.com/streadway/amqp v1.0.0
+	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57
 )

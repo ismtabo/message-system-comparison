@@ -2,27 +2,30 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/Telefonica/redis-vs-nats/benchmarks/kafka-streams/codec"
+	"github.com/Telefonica/redis-vs-nats/benchmarks/kafka/streams/codec"
 	"github.com/Telefonica/redis-vs-nats/model"
-	"github.com/jinzhu/copier"
 	"github.com/lovoo/goka"
 )
 
 var (
-	brokers               = []string{"localhost:9092"}
-	topic     goka.Stream = "messages-stream"
-	group     goka.Group  = "messages-group"
-	processor *goka.Processor
-	size      int64 = 100_000
-	err       error
-	n         int64
-	Ex, Ex2   float64
+	brokers                       = []string{"localhost:9092"}
+	topic             goka.Stream = "messages-stream"
+	group             goka.Group  = "messages-group"
+	processor         *goka.Processor
+	size              uint = 100_000
+	err               error
+	n                 int64
+	Ex, Ex2           float64
+	start             time.Time
+	firstTime         time.Time
+	sinceFirstMessage time.Duration
 )
 
 func main() {
@@ -30,18 +33,22 @@ func main() {
 
 	// process callback is invoked for each message delivered from
 	// "example-stream" topic.
-	cb := func(last chan bool, expectedMessages int64) func(ctx goka.Context, msg interface{}) {
+	cb := func(last chan bool, expectedMessages uint) func(ctx goka.Context, msg interface{}) {
 		return func(ctx goka.Context, msg interface{}) {
 			if n < int64(expectedMessages) {
-				var message model.Message
-				if err := copier.Copy(&message, msg); err != nil {
+				if message, ok := msg.(*model.Message); !ok {
 					log.Printf("fail copying message to model: %s", err)
 				} else {
+					if message.ID == 1 {
+						start = time.Now()
+						firstTime = *message.SentAt
+					}
 					x := time.Since(*message.SentAt).Seconds()
 					n++
 					Ex += x
 					Ex2 += x * x
-					if n >= int64(expectedMessages) {
+					if message.ID == expectedMessages {
+						sinceFirstMessage = time.Since(firstTime)
 						last <- true
 					}
 				}
@@ -79,10 +86,12 @@ func main() {
 	case <-wait: // wait for SIGINT/SIGTERM
 		log.Println("canceling")
 	case <-last:
-		log.Println("retrieve last")
+		log.Println("retreive last")
 	}
 	cancel() // gracefully stop processor
 	<-done
+
+	elapsed := time.Since(start)
 
 	fN := float64(n)
 	fEx := float64(Ex)
@@ -90,5 +99,7 @@ func main() {
 
 	mean := fEx / fN
 	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
-	log.Printf("Messages received: %d Latency: mean %gs, variance %gs Throughput: %g msg/s", n, mean, variance, 1/mean)
+	log.Println("fN", fmt.Sprintf("%g", fN), "fEx", fmt.Sprintf("%g", fEx))
+	log.Printf("Messages received: %d Total time: %s Time among first send and last receive: %s", n, elapsed, sinceFirstMessage)
+	log.Printf("Latency: mean %gs, variance %gs Throughput: %g msg/s", mean, variance, 1/mean)
 }
