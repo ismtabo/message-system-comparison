@@ -62,10 +62,9 @@ func main() {
 	var firstMessage time.Time
 	var sinceFirstMessage time.Duration
 
-	startCh := make(chan time.Time)
 	forever := make(chan bool)
 
-	go func(startCh chan time.Time, last chan bool, expectedMessages int64) {
+	go func(last chan bool, expectedMessages int64) {
 		defer close(last)
 		for d := range msgs {
 			var message model.Message
@@ -86,7 +85,7 @@ func main() {
 				}
 			}
 		}
-	}(startCh, forever, size)
+	}(forever, size)
 
 	log.Println("listening")
 	<-forever

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -75,7 +74,7 @@ func main() {
 
 	mean := fEx / fN
 	variance := (fEx2 - (fEx*fEx)/fN) / (fN - 1)
-	log.Println("fN", fmt.Sprintf("%g", fN), "fEx", fmt.Sprintf("%g", fEx))
 	log.Printf("Messages received: %d Total time: %s Time among first send and last receive: %s", n, elapsed, sinceFirstMessage)
-	log.Printf("Latency: mean %gs, variance %gs Throughput: %g msg/s", mean, variance, 1/mean)
+	log.Printf("Performance: mean %gs, variance %gs", mean, variance)
+	log.Println("Throughput:", 1/mean, "msg/s")
 }

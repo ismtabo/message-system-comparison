@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Telefonica/redis-vs-nats/measurement"
 	"github.com/Telefonica/redis-vs-nats/model"
 
 	"github.com/nats-io/nats.go"
@@ -14,12 +15,15 @@ import (
 var (
 	filename string = "../../../json/100k.json"
 	client   *nats.Conn
+	ms       measurement.Measurements
 	err      error
 )
 
 func init() {
 	client, err = nats.Connect(nats.DefaultURL)
-	checkErr(err)
+	if err != nil {
+		log.Fatalf("fail connecting to nats: %s", err)
+	}
 }
 
 func main() {
@@ -28,44 +32,50 @@ func main() {
 	start := time.Now()
 
 	jsonFile, err := os.Open(filename)
-	checkErr(err)
+	if err != nil {
+		log.Fatalf("fail opening file: %s", err)
+	}
 
 	decoder := json.NewDecoder(jsonFile)
 
-	// Read opening file
+	// Read open file
 	_, err = decoder.Token()
-	checkErr(err)
+	if err != nil {
+		log.Fatalf("fail decoding first token: %s", err)
+	}
 
-	var message model.Message
 	for decoder.More() {
+		var message model.Message
 		err := decoder.Decode(&message)
-		checkErr(err)
+		if err != nil {
+			log.Fatalf("fail decoding message: %s", err)
+		}
 
 		now := time.Now()
 		message.SentAt = &now
 
-		messageJSON, err := json.Marshal(message)
-		checkErr(err)
+		data, err := json.Marshal(message)
+		if err != nil {
+			log.Fatalf("fail marshaling message: %s", err)
+		}
 
-		AddNats(messageJSON)
+		start := time.Now()
+		if err := client.Publish("message", data); err != nil {
+			log.Fatalf("fail sending message: %s", err)
+		}
+		ms.AddMeasurement(time.Since(start))
+
 	}
 
 	// Close the file
 	_, err = decoder.Token()
-	checkErr(err)
+	if err != nil {
+		log.Fatalf("fail decoding last token: %s", err)
+	}
 
 	elapsed := time.Since(start)
 	log.Printf("Nats Sender took %s\n", elapsed)
+	log.Printf("Latency: mean %gs, variance %gs Throughput: %g msg/s", ms.Mean(), ms.Var(), 1/ms.Mean())
+	log.Println("Throughput:", 1/ms.Mean(), "msg/s")
 
-}
-
-func AddNats(data []byte) {
-	err = client.Publish("message", data)
-	checkErr(err)
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Println(err)
-	}
 }
