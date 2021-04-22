@@ -18,7 +18,7 @@ type Benchmark struct {
 }
 
 func NewBenchmark(messaging services.MessagingService) *Benchmark {
-	filename := "../../json/100k.json"
+	filename := "./json/100k.json"
 	var size uint = 100_000
 	return &Benchmark{service: messaging, filename: filename, size: size}
 }

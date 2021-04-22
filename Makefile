@@ -35,7 +35,7 @@ build: build-bin
 .PHONY: run
 run:
 	$(info) 'Launching the service'
-	build/bin/redirector
+	build/bin/messagging-system-benchmark
 
 .PHONY: develenv-up
 develenv-up:
